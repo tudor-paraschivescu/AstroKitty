@@ -38,10 +38,6 @@ void Tema1::Init()
 	canAstronautChangeDirection = true;
 	mouseClick = false;
 
-	std::cout << DEGREES(Math::AngleBetween3Points(glm::vec3(30, 30, 1), glm::vec3(30, 40, 1), glm::vec3(40, 30, 1))) << endl;
-	std::cout << DEGREES(Math::AngleBetween3Points(glm::vec3(0, 0, 1), glm::vec3(1, 1, 1), glm::vec3(1, -sqrt(3)/3, 1))) << endl;
-	std::cout << DEGREES(Math::AngleBetween3Points(glm::vec3(0, 0, 1), glm::vec3(-1, -1, 1), glm::vec3(1, -sqrt(3) / 3, 1))) << endl;
-
 	// Create and add the meshes to the list
 	// The astronaut
 	AddMeshToList(Object::CreateAstronaut(ASTRONAUT_NAME, ASTRONAUT_CENTER, ASTRONAUT_EDGE_LENGTH));
@@ -151,15 +147,13 @@ void Tema1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 	if (canAstronautChangeDirection) {
 		// Last click position in coordinates starting from bottom-left corner
 		glm::vec3 lastClickPosition = { mouseX, WINDOW_HEIGHT - mouseY, 1};
-		std::cout << "CLICK @ " << lastClickPosition[0] << " " << lastClickPosition[1] << std::endl;
+		std::cout << "[CLICK] @ " << lastClickPosition[0] << " " << lastClickPosition[1] << std::endl;
 
 		// Calculate the position of the astronaut top
 		glm::vec3 top = Astronaut::GetTop(centerOfAstronaut, ASTRONAUT_EDGE_LENGTH, rotationAngleOfAstronaut);
-		std::cout << "TOP @ " << top[0] << " " << top[1] << std::endl;
 
 		// Calculate the angle of the new direction
 		rotationAngleOfAstronaut = Math::AngleBetween3Points(centerOfAstronaut, top, lastClickPosition);
-		std::cout << "DEGREES: " << DEGREES(rotationAngleOfAstronaut) << endl;
 
 		// Mouse click event happened
 		mouseClick = true;
