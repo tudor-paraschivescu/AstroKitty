@@ -1,11 +1,12 @@
 #include "Tema1.h"
 
-#include <vector>
-#include <iostream>
-
 using namespace std;
 
 Tema1::Tema1()
+{
+}
+
+Tema1::~Tema1()
 {
 }
 
@@ -31,7 +32,15 @@ void Tema1::Init()
 	grow3 = true;
 	rotationAngle4 = 0;
 	centerOfAstronaut = ASTRONAUT_CENTER;
-	topOfAstronaut = Astronaut::GetTop(centerOfAstronaut, ASTRONAUT_EDGE_LENGTH, M_PI / 2);
+	rotationAngleOfAstronaut = 0;
+	txA = 0;
+	tyA = 0;
+	canAstronautChangeDirection = true;
+	mouseClick = false;
+
+	std::cout << DEGREES(Math::AngleBetween3Points(glm::vec3(30, 30, 1), glm::vec3(30, 40, 1), glm::vec3(40, 30, 1))) << endl;
+	std::cout << DEGREES(Math::AngleBetween3Points(glm::vec3(0, 0, 1), glm::vec3(1, 1, 1), glm::vec3(1, -sqrt(3)/3, 1))) << endl;
+	std::cout << DEGREES(Math::AngleBetween3Points(glm::vec3(0, 0, 1), glm::vec3(-1, -1, 1), glm::vec3(1, -sqrt(3) / 3, 1))) << endl;
 
 	// Create and add the meshes to the list
 	// The astronaut
@@ -112,43 +121,55 @@ void Tema1::Update(float deltaTimeSeconds)
 	animateAsteroid4(deltaTimeSeconds);
 	RenderMesh2D(meshes[ASTEROID4_NAME], shaders["VertexColor"], modelMatrix);
 
-	// Render astronaut
-	RenderMesh2D(meshes[ASTRONAUT_NAME], shaders["VertexColor"], glm::mat3(1));
+	// Animate and render astronaut
+	animateAstronaut(deltaTimeSeconds);
+	RenderMesh2D(meshes[ASTRONAUT_NAME], shaders["VertexColor"], modelMatrix);
 }
 
 void Tema1::FrameEnd()
 {
-
 }
 
 void Tema1::OnInputUpdate(float deltaTime, int mods)
 {
-
 }
 
 void Tema1::OnKeyPress(int key, int mods)
 {
-	// add key press event
 }
 
 void Tema1::OnKeyRelease(int key, int mods)
 {
-	// add key release event
 }
 
 void Tema1::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
-	// add mouse move event
 }
 
 void Tema1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 {
-	// add mouse button press event
+	if (canAstronautChangeDirection) {
+		// Last click position in coordinates starting from bottom-left corner
+		glm::vec3 lastClickPosition = { mouseX, WINDOW_HEIGHT - mouseY, 1};
+		std::cout << "CLICK @ " << lastClickPosition[0] << " " << lastClickPosition[1] << std::endl;
+
+		// Calculate the position of the astronaut top
+		glm::vec3 top = Astronaut::GetTop(centerOfAstronaut, ASTRONAUT_EDGE_LENGTH, rotationAngleOfAstronaut);
+		std::cout << "TOP @ " << top[0] << " " << top[1] << std::endl;
+
+		// Calculate the angle of the new direction
+		rotationAngleOfAstronaut = Math::AngleBetween3Points(centerOfAstronaut, top, lastClickPosition);
+		std::cout << "DEGREES: " << DEGREES(rotationAngleOfAstronaut) << endl;
+
+		// Mouse click event happened
+		mouseClick = true;
+	}
 }
 
 void Tema1::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
 {
-	// add mouse button release event
+	// Mouse click event stopped
+	mouseClick = false;
 }
 
 void Tema1::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)

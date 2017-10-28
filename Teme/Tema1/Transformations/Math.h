@@ -4,11 +4,12 @@
 
 namespace Math {
 
-	inline float AngleBetween3Points(glm::vec3 center, glm::vec3 top, glm::vec3 direction)
+	inline float AngleBetween3Points(glm::vec3 center, glm::vec3 top, glm::vec3 click)
 	{
 		float angle1 = atan2(center[1] - top[1], center[0] - top[0]);
-		float angle2 = atan2(center[1] - direction[1], center[0] - direction[0]);
-		return angle1 - angle2;
+		float angle2 = atan2(center[1] - click[1], center[0] - click[0]);
+		float angleBetweenLines = angle2 - angle1;
+		return angleBetweenLines;
 	}
 
 }

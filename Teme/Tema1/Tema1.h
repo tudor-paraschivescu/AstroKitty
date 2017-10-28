@@ -2,8 +2,11 @@
 
 #include <Component/SimpleScene.h>
 #include <string>
+#include <iostream>
+#include <vector>
 #include <Core/Engine.h>
 #include "Objects\Object.h"
+#include "Transformations\Math.h"
 #include "Transformations\Transformation.h"
 #include "Objects\Astronaut.h"
 
@@ -12,6 +15,7 @@ class Tema1 : public SimpleScene
 public:
 
 	Tema1();
+	~Tema1();
 	void Init() override;
 
 	static const int WINDOW_HEIGHT = 960;
@@ -36,8 +40,9 @@ private:
 
 	// ------------------------------ ASTRONAUT ------------------------------
 	const std::string ASTRONAUT_NAME = "astronaut";
-	const glm::vec3 ASTRONAUT_CENTER = glm::vec3(40, 40, 1);
+	const glm::vec3 ASTRONAUT_CENTER = glm::vec3(400, 400, 1);
 	const float ASTRONAUT_EDGE_LENGTH = 25;
+	const float ASTRONAUT_SPEED = 400;
 	// -----------------------------------------------------------------------
 
 	// ------------------------------ ASTEROIDS ------------------------------
@@ -131,8 +136,12 @@ private:
 	bool grow3;					// condition variable for growing or shrinking (asteroid3)
 	float rotationAngle4;		// angle for the rotation (asteroid4)
 
-	glm::vec3 centerOfAstronaut;
-	glm::vec3 topOfAstronaut;
+	glm::vec3 centerOfAstronaut;			// coordinates for the center of the Astronaut
+	float txA;								// translation for the Astronaut on Ox axis
+	float tyA;								// translation for the Astronaut on Oy axis
+	float rotationAngleOfAstronaut;			// angle of the Astronaut movement (in [-90, 270] deg interval)
+	bool canAstronautChangeDirection;		// condition variable that is activated when the Astronaut is staying
+	bool mouseClick;						// condition variable to determine if a mouse click ocurred
 	// -----------------------------------------------------------------------
 
 	// Animations for all asteroids
@@ -212,6 +221,30 @@ private:
 		modelMatrix *= Transformation::Translate(-ASTEROID4_OFFSET_X, -ASTEROID4_OFFSET_Y);
 	}
 
+	void animateAstronaut(float deltaTimeSeconds) {
 
+		if (canAstronautChangeDirection) {
+			if (mouseClick) {
+				// The astronaut cannot change its direction after the mouse click
+				canAstronautChangeDirection = false;
+			}
+		}
+		else {
+			float updatedSpeed = deltaTimeSeconds * ASTRONAUT_SPEED;
+
+			// Update the translation factors for both axis
+			txA += updatedSpeed * cos(M_PI / 2 + rotationAngleOfAstronaut);
+			tyA += updatedSpeed * sin(M_PI / 2 + rotationAngleOfAstronaut);
+		}
+
+		// Move the astronaut
+		modelMatrix = Transformation::Translate(ASTRONAUT_CENTER[0] + txA, ASTRONAUT_CENTER[1] + tyA);
+		modelMatrix *= Transformation::Rotate(rotationAngleOfAstronaut);
+		modelMatrix *= Transformation::Translate(-ASTRONAUT_CENTER[0], -ASTRONAUT_CENTER[1]);
+
+		// Update the center of the astronaut
+		centerOfAstronaut[0] = ASTRONAUT_CENTER[0] + txA;
+		centerOfAstronaut[1] = ASTRONAUT_CENTER[1] + tyA;
+	}
 
 };
