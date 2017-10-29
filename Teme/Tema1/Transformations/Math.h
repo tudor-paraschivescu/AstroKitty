@@ -12,4 +12,10 @@ namespace Math {
 		return angleBetweenLines;
 	}
 
+	inline float DotProduct(glm::vec3 a, glm::vec3 b) {
+		glm::vec3 product = a * b;
+		float dotProduct = product[0] + product[1] + product[2];
+		return dotProduct;
+	}
+
 }

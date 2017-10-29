@@ -2,6 +2,9 @@
 
 using namespace std;
 
+vector<Line> collisionLines;			// stores collision lines for all the platforms
+int indexOfCollisionLine = -1;			// stores the index of the line where the last collision ocurred
+
 Tema1::Tema1()
 {
 }
@@ -71,6 +74,11 @@ void Tema1::Init()
 	AddMeshToList(Object::CreateAsteroid(ASTEROID2_NAME, ASTEROID2_CENTER, ASTEROID2_RADIUS));
 	AddMeshToList(Object::CreateAsteroid(ASTEROID3_NAME, ASTEROID3_CENTER, ASTEROID3_RADIUS));
 	AddMeshToList(Object::CreateAsteroid(ASTEROID4_NAME, ASTEROID4_CENTER, ASTEROID4_RADIUS));
+}
+
+void Tema1::addCollisionLine(Line line)
+{
+	collisionLines.push_back(line);
 }
 
 void Tema1::FrameStart()
@@ -153,7 +161,8 @@ void Tema1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 		glm::vec3 top = Astronaut::GetTop(centerOfAstronaut, ASTRONAUT_EDGE_LENGTH, rotationAngleOfAstronaut);
 
 		// Calculate the angle of the new direction
-		rotationAngleOfAstronaut = Math::AngleBetween3Points(centerOfAstronaut, top, lastClickPosition);
+		rotationAngleOfAstronaut += Math::AngleBetween3Points(centerOfAstronaut, top, lastClickPosition);
+		cout << "Rotation Angle of Astronaut: " << DEGREES(rotationAngleOfAstronaut) << endl;
 
 		// Mouse click event happened
 		mouseClick = true;
@@ -172,4 +181,112 @@ void Tema1::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
 
 void Tema1::OnWindowResize(int width, int height)
 {
+}
+
+bool Tema1::detectCollision() {
+
+	bool isCollision = false;
+
+	for (int i = 0; i < collisionLines.size(); i++) {
+
+		// Store the properties of the ray (line segment) and the circle around the astronaut
+		glm::vec3 firstLinePoint = collisionLines[i].getFirstPoint();
+		glm::vec3 secondLinePoint = collisionLines[i].getSecondPoint();
+		glm::vec3 centerOfCircle = centerOfAstronaut;
+		float radius = (((float)sqrt(3)) * ASTRONAUT_EDGE_LENGTH) / 3.0;
+
+		glm::vec3 d = secondLinePoint - firstLinePoint; // Direction vector of ray (start to end)
+		glm::vec3 f = firstLinePoint - centerOfCircle;	// Vector from circle center to ray start
+
+		/*
+		 *	The intersection is found by Plugging: P = E + t * d
+		 *	This is a parametric equation: Px = Ex + tdx, Py = Ey + tdy
+		 *	The form wil be: (x - cx)^2 + (y - cy)^2 = r^2, (cx, cy) = center of circle
+		 *	--------------------- Lots of calculus later ----------------------
+		 *	Final form of the equation: t^2 * (d .* d) + 2t * ( f .* d ) + ( f .* f - r^2 ) = 0
+		 *	where .* is DOT PRODUCT of two vectors
+		 *	NEXT: Solving the equation...
+		 */
+
+		// Equation parameters
+		float a = Math::DotProduct(d, d);
+		float b = 2 * Math::DotProduct(f, d);
+		float c = Math::DotProduct(f, f) - radius * radius;
+
+		// The discriminant of the equation
+		float discriminant = b * b - 4 * a * c;
+
+		if (discriminant < 0) {
+			// No intersection because the equation does not have a solution
+			continue;
+		}
+
+		// The equation has one or two solutions
+		discriminant = sqrt(discriminant);
+		float sol1 = (-b - discriminant) / (2 * a);
+		float sol2 = (-b + discriminant) / (2 * a);
+
+		if ((sol1 >= 0 && sol1 <= 1) || (sol2 >= 0 && sol2 <= 1)) {
+			// We have at least one valid solution
+			isCollision = true;
+			indexOfCollisionLine = i;
+			break;
+		}
+
+		// No collision detected for this line
+	}
+
+	return isCollision;
+}
+
+void Tema1::updateAstronautAfterCollision()
+{
+	Line collisionLine = collisionLines[indexOfCollisionLine];
+	Line::CollisionLineType lineType = collisionLine.getCollisionLineType();
+
+	if (collisionLine.getPlatformType() == Object::PlatformType::STATIONARY)
+	{
+		// Astronaut is on a platform and can change direction
+		canAstronautChangeDirection = true;
+
+		// Calculate the distance from the center of the triangle to the platform
+		float aLine = collisionLine.getSecondPoint()[1] - collisionLine.getFirstPoint()[1];
+		float bLine = collisionLine.getSecondPoint()[0] - collisionLine.getFirstPoint()[0];
+		float cLine = collisionLine.getFirstPoint()[0] * collisionLine.getSecondPoint()[1] -
+			collisionLine.getSecondPoint()[0] * collisionLine.getFirstPoint()[1];
+		float centerLine = aLine * centerOfAstronaut[0] + bLine * centerOfAstronaut[1] + cLine;
+		float distanceToPlatform = abs(centerLine / sqrt(aLine * aLine + bLine * bLine));
+
+		// Calculate the distance to the base of the triangle
+		float distanceToBase = (((float)sqrt(3)) * ASTRONAUT_EDGE_LENGTH) / 6;
+
+		// Calculate the offset to the platform
+		float offset = distanceToPlatform - distanceToBase;
+
+		switch (lineType)
+		{
+		case Line::CollisionLineType::BOTTOM:
+			rotationAngleOfAstronaut = M_PI;
+			tyA += offset;
+			break;
+
+		case Line::CollisionLineType::TOP:
+			rotationAngleOfAstronaut = 0;
+			tyA -= offset;
+			break;
+
+		case Line::CollisionLineType::LEFT:
+			break;
+
+		case Line::CollisionLineType::RIGHT:
+			break;
+
+		default:
+			break;
+		}		
+	}
+
+	
+
+
 }

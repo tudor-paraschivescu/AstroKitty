@@ -1,4 +1,6 @@
 #include "Object.h"
+#include "../Tema1.h"
+#include "Line.h"
 
 Mesh* Object::CreateAstronaut(std::string name,
 								glm::vec3 center,
@@ -89,13 +91,17 @@ Mesh* Object::CreatePlatform(std::string name,
 		break;
 	}
 
+	glm::vec3 bottomRightCorner = bottomLeftCorner + glm::vec3(width, 0, 0);
+	glm::vec3 topLeftCorner = bottomLeftCorner + glm::vec3(0, height, 0);
+	glm::vec3 topRightCorner = bottomLeftCorner + glm::vec3(width, height, 0);
+
 	// Create the vertices vector
 	std::vector<VertexFormat> vertices =
 	{
 		VertexFormat(bottomLeftCorner, color),
-		VertexFormat(bottomLeftCorner + glm::vec3(0, height, 0), color),
-		VertexFormat(bottomLeftCorner + glm::vec3(width, height, 0), color),
-		VertexFormat(bottomLeftCorner + glm::vec3(width, 0, 0), color)
+		VertexFormat(topLeftCorner, color),
+		VertexFormat(topRightCorner, color),
+		VertexFormat(bottomRightCorner, color)
 	};
 
 	// Create the indices vector
@@ -108,6 +114,12 @@ Mesh* Object::CreatePlatform(std::string name,
 	// Create the mesh for the platform
 	Mesh* platform = new Mesh(name);
 	platform->InitFromData(vertices, indices);
+
+	// Add collision lines
+	Tema1::addCollisionLine(Line(bottomLeftCorner, bottomRightCorner, type, Line::BOTTOM));
+	Tema1::addCollisionLine(Line(topLeftCorner, topRightCorner, type, Line::TOP));
+	Tema1::addCollisionLine(Line(bottomLeftCorner, topLeftCorner, type, Line::LEFT));
+	Tema1::addCollisionLine(Line(bottomRightCorner, topRightCorner, type, Line::RIGHT));
 
 	return platform;
 }

@@ -6,6 +6,7 @@
 #include <vector>
 #include <Core/Engine.h>
 #include "Objects\Object.h"
+#include "Objects\Line.h"
 #include "Transformations\Math.h"
 #include "Transformations\Transformation.h"
 #include "Objects\Astronaut.h"
@@ -17,6 +18,9 @@ public:
 	Tema1();
 	~Tema1();
 	void Init() override;
+
+	// Add a collision line for a platform
+	static void addCollisionLine(Line line);
 
 	static const int WINDOW_HEIGHT = 960;
 	static const int WINDOW_WIDTH = 1720;
@@ -35,6 +39,8 @@ private:
 	void OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods) override;
 	void OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY) override;
 	void OnWindowResize(int width, int height) override;
+	bool detectCollision();
+	void updateAstronautAfterCollision();
 
 	// Private constants for the meshes
 
@@ -42,7 +48,7 @@ private:
 	const std::string ASTRONAUT_NAME = "astronaut";
 	const glm::vec3 ASTRONAUT_CENTER = glm::vec3(400, 400, 1);
 	const float ASTRONAUT_EDGE_LENGTH = 25;
-	const float ASTRONAUT_SPEED = 400;
+	const float ASTRONAUT_SPEED = 100;
 	// -----------------------------------------------------------------------
 
 	// ------------------------------ ASTEROIDS ------------------------------
@@ -142,9 +148,10 @@ private:
 	float rotationAngleOfAstronaut;			// angle of the Astronaut movement (in [-90, 270] deg interval)
 	bool canAstronautChangeDirection;		// condition variable that is activated when the Astronaut is staying
 	bool mouseClick;						// condition variable to determine if a mouse click ocurred
+
 	// -----------------------------------------------------------------------
 
-	// Animations for all asteroids
+	// Animations for all moving objects
 
 	void animateAsteroid1(float deltaTimeSeconds) {
 		if (ty1 > ASTEROID1_Y_LIMIT_UP) {
@@ -230,11 +237,18 @@ private:
 			}
 		}
 		else {
-			float updatedSpeed = deltaTimeSeconds * ASTRONAUT_SPEED;
+			if (detectCollision()) {
+				std::cout << "[COLLISION] @ " <<
+					centerOfAstronaut[0] << " " << centerOfAstronaut[1] << std::endl;
+				updateAstronautAfterCollision();
+			}
+			else {
+				float updatedSpeed = deltaTimeSeconds * ASTRONAUT_SPEED;
 
-			// Update the translation factors for both axis
-			txA += updatedSpeed * cos(M_PI / 2 + rotationAngleOfAstronaut);
-			tyA += updatedSpeed * sin(M_PI / 2 + rotationAngleOfAstronaut);
+				// Update the translation factors for both axis
+				txA += updatedSpeed * cos(M_PI / 2 + rotationAngleOfAstronaut);
+				tyA += updatedSpeed * sin(M_PI / 2 + rotationAngleOfAstronaut);
+			}
 		}
 
 		// Move the astronaut
