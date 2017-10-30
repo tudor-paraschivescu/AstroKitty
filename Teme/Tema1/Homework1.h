@@ -155,6 +155,11 @@ private:
 	bool mouseClick;						// condition variable to determine if a mouse click ocurred
 	bool onPlatform;						// condition variable to determine if the astronaut is on a platform
 
+	// Private statistics that will show up after game ends
+	int _acceptedClicks = 0;
+	int _rejectedClicks = 0;
+	int _collisions = 0;
+
 	// -----------------------------------------------------------------------
 
 	// Animations for all moving objects
@@ -247,6 +252,7 @@ private:
 			if (detectCollision() && !copyOfOnPlatform) {
 					std::cout << "[---- COLLISION ---] @ " << std::setw(7) << centerOfAstronaut[0]
 						<< " " << std::setw(7) << centerOfAstronaut[1] << std::endl;
+					_collisions++;
 					updateAstronautAfterCollision();
 			}
 			else {

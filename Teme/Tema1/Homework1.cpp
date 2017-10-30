@@ -173,6 +173,7 @@ void Homework1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 			// Ignore mouse click event to prevent passing through a platform
 			std::cout << "[- REJECTED CLICK -] @ " << setw(7) << lastClickPosition[0]
 				<< " " << setw(7) << lastClickPosition[1] << std::endl;
+			_rejectedClicks++;
 			return;
 		}
 
@@ -184,11 +185,13 @@ void Homework1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 
 		std::cout << "[- ACCEPTED CLICK -] @ " << setw(7) << lastClickPosition[0]
 			<< " " << setw(7) << lastClickPosition[1] << std::endl;
+		_acceptedClicks++;
 	}
 	else {
 		// Ignore mouse click event to prevent changing the direction during movement
 		std::cout << "[- REJECTED CLICK -] @ " << setw(7) << lastClickPosition[0]
 			<< " " << setw(7) << lastClickPosition[1] << std::endl;
+		_rejectedClicks++;
 	}
 }
 
@@ -353,10 +356,22 @@ void Homework1::updateAstronautAfterCollision()
 		}
 
 	break;
-
 	}
 	
+	case (Object::PlatformType::FINISH):
+	{
+		// Close the window
+		Engine::GetWindow()->Close();
+		cout << "[-- WINDOW CLOSED -]\n----------------------------------------------" << endl;
 
+		// Display WINNING MESSAGE
+		cout << "*** OMG! YOU WON! YOU ARE ONE OF THE GREATEST ASTRONAUTS I HAVE EVER SEEN! ***" << endl;
+
+		// Display stats
+		cout << "*** Stats: [COLLISIONS: " << _collisions <<
+			"] [ACCEPTED CLICKS: " << _acceptedClicks <<
+			"] [REJECTED CLICKS: " << _rejectedClicks << "] ***\n";
+	}
 
 	default:
 		break;
