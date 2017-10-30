@@ -13,14 +13,14 @@ int main(int argc, char **argv)
 
 	// Create a window property structure
 	WindowProperties wp;
-	wp.resolution = glm::ivec2(Tema1::WINDOW_WIDTH, Tema1::WINDOW_HEIGHT);
+	wp.resolution = glm::ivec2(Homework1::WINDOW_WIDTH, Homework1::WINDOW_HEIGHT);
 	wp.name = "AstroKitty";
 
 	// Init the Engine and create a new window with the defined properties
 	WindowObject* window = Engine::Init(wp);
 
-	// Create a new 3D world and start running it
-	World *world = new Tema1();
+	// Create a new 2D world and start running it
+	World *world = new Homework1();
 	world->Init();
 	world->Run();
 

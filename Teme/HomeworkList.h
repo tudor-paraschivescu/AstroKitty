@@ -1,3 +1,3 @@
 #pragma once
 
-#include <Teme\Tema1\Tema1.h>
+#include <Teme\Tema1\Homework1.h>

@@ -1,5 +1,5 @@
 #include "Object.h"
-#include "../Tema1.h"
+#include "../Homework1.h"
 #include "Line.h"
 
 Mesh* Object::CreateAstronaut(std::string name,
@@ -116,10 +116,10 @@ Mesh* Object::CreatePlatform(std::string name,
 	platform->InitFromData(vertices, indices);
 
 	// Add collision lines
-	Tema1::addCollisionLine(Line(bottomLeftCorner, bottomRightCorner, type, Line::BOTTOM));
-	Tema1::addCollisionLine(Line(topLeftCorner, topRightCorner, type, Line::TOP));
-	Tema1::addCollisionLine(Line(bottomLeftCorner, topLeftCorner, type, Line::LEFT));
-	Tema1::addCollisionLine(Line(bottomRightCorner, topRightCorner, type, Line::RIGHT));
+	Homework1::addCollisionLine(Line(bottomLeftCorner, bottomRightCorner, type, Line::BOTTOM));
+	Homework1::addCollisionLine(Line(topLeftCorner, topRightCorner, type, Line::TOP));
+	Homework1::addCollisionLine(Line(bottomLeftCorner, topLeftCorner, type, Line::LEFT));
+	Homework1::addCollisionLine(Line(bottomRightCorner, topRightCorner, type, Line::RIGHT));
 
 	return platform;
 }

@@ -1,19 +1,19 @@
-#include "Tema1.h"
+#include "Homework1.h"
 
 using namespace std;
 
 vector<Line> collisionLines;			// stores collision lines for all the platforms
 int indexOfCollisionLine = -1;			// stores the index of the line where the last collision ocurred
 
-Tema1::Tema1()
+Homework1::Homework1()
 {
 }
 
-Tema1::~Tema1()
+Homework1::~Homework1()
 {
 }
 
-void Tema1::Init()
+void Homework1::Init()
 {
 	// Set the camera
 	glm::ivec2 resolution = window->GetResolution();
@@ -40,6 +40,7 @@ void Tema1::Init()
 	tyA = 0;
 	canAstronautChangeDirection = true;
 	mouseClick = false;
+	onPlatform = false;
 
 	// Create and add the meshes to the list
 	// The astronaut
@@ -76,12 +77,12 @@ void Tema1::Init()
 	AddMeshToList(Object::CreateAsteroid(ASTEROID4_NAME, ASTEROID4_CENTER, ASTEROID4_RADIUS));
 }
 
-void Tema1::addCollisionLine(Line line)
+void Homework1::addCollisionLine(Line line)
 {
 	collisionLines.push_back(line);
 }
 
-void Tema1::FrameStart()
+void Homework1::FrameStart()
 {
 	// clears the color buffer (using the previously set color) and depth buffer
 	glClearColor(0, 0, 0, 1);
@@ -107,7 +108,7 @@ void Tema1::FrameStart()
 	RenderMesh2D(meshes[PLATFORM_FINISH_NAME], shaders["VertexColor"], glm::mat3(1));
 }
 
-void Tema1::Update(float deltaTimeSeconds)
+void Homework1::Update(float deltaTimeSeconds)
 {
 	// Animate and render asteroid 1
 	animateAsteroid1(deltaTimeSeconds);
@@ -130,60 +131,73 @@ void Tema1::Update(float deltaTimeSeconds)
 	RenderMesh2D(meshes[ASTRONAUT_NAME], shaders["VertexColor"], modelMatrix);
 }
 
-void Tema1::FrameEnd()
+void Homework1::FrameEnd()
 {
 }
 
-void Tema1::OnInputUpdate(float deltaTime, int mods)
+void Homework1::OnInputUpdate(float deltaTime, int mods)
 {
 }
 
-void Tema1::OnKeyPress(int key, int mods)
+void Homework1::OnKeyPress(int key, int mods)
 {
 }
 
-void Tema1::OnKeyRelease(int key, int mods)
+void Homework1::OnKeyRelease(int key, int mods)
 {
 }
 
-void Tema1::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
+void Homework1::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
 }
 
-void Tema1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
+void Homework1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 {
+	// Last click position in coordinates starting from bottom-left corner
+	glm::vec3 lastClickPosition = { mouseX, WINDOW_HEIGHT - mouseY, 1 };
+
 	if (canAstronautChangeDirection) {
-		// Last click position in coordinates starting from bottom-left corner
-		glm::vec3 lastClickPosition = { mouseX, WINDOW_HEIGHT - mouseY, 1};
-		std::cout << "[CLICK] @ " << lastClickPosition[0] << " " << lastClickPosition[1] << std::endl;
-
 		// Calculate the position of the astronaut top
 		glm::vec3 top = Astronaut::GetTop(centerOfAstronaut, ASTRONAUT_EDGE_LENGTH, rotationAngleOfAstronaut);
 
+		// Calculate the angle between the old and the new direction of movement
+		float offsetAngle = Math::AngleBetween3Points(centerOfAstronaut, top, lastClickPosition);
+
+		if (onPlatform && cos(offsetAngle) <= 0) {
+			// Ignore mouse click event to prevent passing through a platform
+			std::cout << "[- REJECTED CLICK -] @ " << lastClickPosition[0] << " " << lastClickPosition[1] << std::endl;
+			return;
+		}
+
 		// Calculate the angle of the new direction
-		rotationAngleOfAstronaut += Math::AngleBetween3Points(centerOfAstronaut, top, lastClickPosition);
-		cout << "Rotation Angle of Astronaut: " << DEGREES(rotationAngleOfAstronaut) << endl;
+		rotationAngleOfAstronaut += offsetAngle;
 
 		// Mouse click event happened
 		mouseClick = true;
+
+		std::cout << "[- ACCEPTED CLICK -] @ " << lastClickPosition[0] << " " << lastClickPosition[1] << std::endl;
+	}
+	else {
+		// Ignore mouse click event to prevent changing the direction during movement
+		std::cout << "[- REJECTED CLICK -] @ " << lastClickPosition[0] << " " << lastClickPosition[1] << std::endl;
 	}
 }
 
-void Tema1::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
+void Homework1::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
 {
 	// Mouse click event stopped
 	mouseClick = false;
 }
 
-void Tema1::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
+void Homework1::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
 {
 }
 
-void Tema1::OnWindowResize(int width, int height)
+void Homework1::OnWindowResize(int width, int height)
 {
 }
 
-bool Tema1::detectCollision() {
+bool Homework1::detectCollision() {
 
 	bool isCollision = false;
 
@@ -230,16 +244,22 @@ bool Tema1::detectCollision() {
 			// We have at least one valid solution
 			isCollision = true;
 			indexOfCollisionLine = i;
+			onPlatform = true;
 			break;
 		}
 
 		// No collision detected for this line
 	}
 
+	// The astronaut left the platform
+	if (!isCollision && onPlatform) {
+		onPlatform = false;
+	}
+
 	return isCollision;
 }
 
-void Tema1::updateAstronautAfterCollision()
+void Homework1::updateAstronautAfterCollision()
 {
 	Line collisionLine = collisionLines[indexOfCollisionLine];
 	Line::CollisionLineType lineType = collisionLine.getCollisionLineType();
@@ -253,7 +273,7 @@ void Tema1::updateAstronautAfterCollision()
 		float aLine = collisionLine.getSecondPoint()[1] - collisionLine.getFirstPoint()[1];
 		float bLine = collisionLine.getSecondPoint()[0] - collisionLine.getFirstPoint()[0];
 		float cLine = collisionLine.getFirstPoint()[0] * collisionLine.getSecondPoint()[1] -
-			collisionLine.getSecondPoint()[0] * collisionLine.getFirstPoint()[1];
+			collisionLine.getSecondPoint()[0] * collisionLine.getFirstPoint()[1];	
 		float centerLine = aLine * centerOfAstronaut[0] + bLine * centerOfAstronaut[1] + cLine;
 		float distanceToPlatform = abs(centerLine / sqrt(aLine * aLine + bLine * bLine));
 
@@ -262,6 +282,11 @@ void Tema1::updateAstronautAfterCollision()
 
 		// Calculate the offset to the platform
 		float offset = distanceToPlatform - distanceToBase;
+
+		/* I need this because some weird shit is going on with
+		 * the offset for left and right platform */
+		float offsetRight = (centerOfAstronaut[0] - collisionLine.getFirstPoint()[0]) - distanceToBase;
+		float offsetLeft = -(centerOfAstronaut[0] - collisionLine.getFirstPoint()[0]) - distanceToBase;
 
 		switch (lineType)
 		{
@@ -276,17 +301,18 @@ void Tema1::updateAstronautAfterCollision()
 			break;
 
 		case Line::CollisionLineType::LEFT:
+			rotationAngleOfAstronaut = M_PI / 2;
+			txA += offsetLeft;
 			break;
 
 		case Line::CollisionLineType::RIGHT:
+			rotationAngleOfAstronaut = 3 * M_PI / 2;
+			txA -= offsetRight;
 			break;
 
 		default:
 			break;
 		}		
 	}
-
-	
-
 
 }
