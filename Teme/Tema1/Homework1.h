@@ -3,6 +3,7 @@
 #include <Component/SimpleScene.h>
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <Core/Engine.h>
 #include "Objects\Object.h"
@@ -46,27 +47,27 @@ private:
 
 	// ------------------------------ ASTRONAUT ------------------------------
 	const std::string ASTRONAUT_NAME = "astronaut";
-	const glm::vec3 ASTRONAUT_CENTER = glm::vec3(400, 400, 1);
+	const glm::vec3 ASTRONAUT_CENTER = glm::vec3(40, 40, 1);
 	const float ASTRONAUT_EDGE_LENGTH = 25;
-	const float ASTRONAUT_SPEED = 300;
+	const float ASTRONAUT_SPEED = 400;
 	// -----------------------------------------------------------------------
 
 	// ------------------------------ ASTEROIDS ------------------------------
 	const std::string ASTEROID1_NAME = "asteroid1";
-	const glm::vec3 ASTEROID1_CENTER = glm::vec3(150, 150, 1);
+	const glm::vec3 ASTEROID1_CENTER = glm::vec3(150, 400, 1);
 	const float ASTEROID1_RADIUS = 35;
 	const int ASTEROID1_Y_TRANSLATION_FACTOR = 200;
-	const int ASTEROID1_Y_LIMIT_UP = 500;
+	const int ASTEROID1_Y_LIMIT_UP = 200;
 	const int ASTEROID1_Y_LIMIT_DOWN = 100;
 
 	const std::string ASTEROID2_NAME = "asteroid2";
-	const glm::vec3 ASTEROID2_CENTER = glm::vec3(600, 400, 1);
-	const float ASTEROID2_RADIUS = 100;
+	const float ASTEROID2_OFFSET_X = 350;
+	const float ASTEROID2_OFFSET_Y = 280;
+	const glm::vec3 ASTEROID2_CENTER = glm::vec3(ASTEROID2_OFFSET_X, ASTEROID2_OFFSET_Y, 1);
+	const float ASTEROID2_RADIUS = 90;
 	const float ASTEROID2_SCALE_FACTOR_MIN = 0.5;
-	const float ASTEROID2_SCALE_FACTOR_MAX = 2;
+	const float ASTEROID2_SCALE_FACTOR_MAX = 1.5;
 	const float ASTEROID2_SCALE_FACTOR = 0.40;
-	const float ASTEROID2_OFFSET_X = 600;
-	const float ASTEROID2_OFFSET_Y = 400;
 
 	const std::string ASTEROID3_NAME = "asteroid3";
 	const glm::vec3 ASTEROID3_CENTER = glm::vec3(1400, 200, 1);
@@ -106,24 +107,28 @@ private:
 	const float WALL_RIGHT_HEIGHT = (float) WINDOW_HEIGHT;
 
 	const std::string PLATFORM_STATIONARY1_NAME = "platform_stationary1";
-	const glm::vec3 PLATFORM_STATIONARY1_BOTTOM_LEFT_CORNER = glm::vec3(120, 820, 1);
+	const glm::vec3 PLATFORM_STATIONARY1_BOTTOM_LEFT_CORNER = glm::vec3(100, 820, 1);
 	const float PLATFORM_STATIONARY1_WIDTH = 150;
 
 	const std::string PLATFORM_STATIONARY2_NAME = "platform_stationary2";
-	const glm::vec3 PLATFORM_STATIONARY2_BOTTOM_LEFT_CORNER = glm::vec3(500, 720, 1);
+	const glm::vec3 PLATFORM_STATIONARY2_BOTTOM_LEFT_CORNER = glm::vec3(320, 720, 1);
 	const float PLATFORM_STATIONARY2_WIDTH = 240;
 
+	const std::string PLATFORM_STATIONARY3_NAME = "platform_stationary3";
+	const glm::vec3 PLATFORM_STATIONARY3_BOTTOM_LEFT_CORNER = glm::vec3(900, 180, 1);
+	const float PLATFORM_STATIONARY3_HEIGHT = 400;
+
 	const std::string PLATFORM_BOUNCE1_NAME = "platform_bounce1";
-	const glm::vec3 PLATFORM_BOUNCE1_BOTTOM_LEFT_CORNER = glm::vec3(250, 50, 1);
-	const float PLATFORM_BOUNCE1_WIDTH = 200;
+	const glm::vec3 PLATFORM_BOUNCE1_BOTTOM_LEFT_CORNER = glm::vec3(700, 20, 1);
+	const float PLATFORM_BOUNCE1_HEIGHT = 350;
 
 	const std::string PLATFORM_BOUNCE2_NAME = "platform_bounce2";
-	const glm::vec3 PLATFORM_BOUNCE2_BOTTOM_LEFT_CORNER = glm::vec3(700, 100, 1);
-	const float PLATFORM_BOUNCE2_WIDTH = 400;
+	const glm::vec3 PLATFORM_BOUNCE2_BOTTOM_LEFT_CORNER = glm::vec3(700, 600, 1);
+	const float PLATFORM_BOUNCE2_HEIGHT = 350;
 
 	const std::string PLATFORM_BOUNCE3_NAME = "platform_bounce3";
-	const glm::vec3 PLATFORM_BOUNCE3_BOTTOM_LEFT_CORNER = glm::vec3(1050, 850, 1);
-	const float PLATFORM_BOUNCE3_WIDTH = 400;
+	const glm::vec3 PLATFORM_BOUNCE3_BOTTOM_LEFT_CORNER = glm::vec3(1000, 650, 1);
+	const float PLATFORM_BOUNCE3_HEIGHT = 300;
 
 	const std::string PLATFORM_FINISH_NAME = "platform_finish";
 	const glm::vec3 PLATFORM_FINISH_BOTTOM_LEFT_CORNER = glm::vec3(WINDOW_WIDTH - 2 * PLATFORM_THICKNESS, 200, 1);
@@ -240,8 +245,8 @@ private:
 		else {
 			bool copyOfOnPlatform = onPlatform;
 			if (detectCollision() && !copyOfOnPlatform) {
-					std::cout << "[---- COLLISION ---] @ " <<
-						centerOfAstronaut[0] << " " << centerOfAstronaut[1] << std::endl;
+					std::cout << "[---- COLLISION ---] @ " << std::setw(7) << centerOfAstronaut[0]
+						<< " " << std::setw(7) << centerOfAstronaut[1] << std::endl;
 					updateAstronautAfterCollision();
 			}
 			else {

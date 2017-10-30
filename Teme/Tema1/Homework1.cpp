@@ -42,6 +42,9 @@ void Homework1::Init()
 	mouseClick = false;
 	onPlatform = false;
 
+	// Set precision limit for output
+	cout << fixed << setprecision(2);
+
 	// Create and add the meshes to the list
 	// The astronaut
 	AddMeshToList(Object::CreateAstronaut(ASTRONAUT_NAME, ASTRONAUT_CENTER, ASTRONAUT_EDGE_LENGTH));
@@ -61,12 +64,14 @@ void Homework1::Init()
 		PLATFORM_THICKNESS, PLATFORM_STATIONARY1_WIDTH, Object::PlatformType::STATIONARY));
 	AddMeshToList(Object::CreatePlatform(PLATFORM_STATIONARY2_NAME, PLATFORM_STATIONARY2_BOTTOM_LEFT_CORNER,
 		PLATFORM_THICKNESS, PLATFORM_STATIONARY2_WIDTH, Object::PlatformType::STATIONARY));
+	AddMeshToList(Object::CreatePlatform(PLATFORM_STATIONARY3_NAME, PLATFORM_STATIONARY3_BOTTOM_LEFT_CORNER,
+		PLATFORM_STATIONARY3_HEIGHT, PLATFORM_THICKNESS, Object::PlatformType::STATIONARY));
 	AddMeshToList(Object::CreatePlatform(PLATFORM_BOUNCE1_NAME, PLATFORM_BOUNCE1_BOTTOM_LEFT_CORNER,
-		PLATFORM_THICKNESS, PLATFORM_BOUNCE1_WIDTH, Object::PlatformType::BOUNCE));
+		PLATFORM_BOUNCE1_HEIGHT, PLATFORM_THICKNESS, Object::PlatformType::BOUNCE));
 	AddMeshToList(Object::CreatePlatform(PLATFORM_BOUNCE2_NAME, PLATFORM_BOUNCE2_BOTTOM_LEFT_CORNER,
-		PLATFORM_THICKNESS, PLATFORM_BOUNCE2_WIDTH, Object::PlatformType::BOUNCE));
+		PLATFORM_BOUNCE2_HEIGHT, PLATFORM_THICKNESS, Object::PlatformType::BOUNCE));
 	AddMeshToList(Object::CreatePlatform(PLATFORM_BOUNCE3_NAME, PLATFORM_BOUNCE3_BOTTOM_LEFT_CORNER,
-		PLATFORM_THICKNESS, PLATFORM_BOUNCE3_WIDTH, Object::PlatformType::BOUNCE));
+		PLATFORM_BOUNCE3_HEIGHT, PLATFORM_THICKNESS, Object::PlatformType::BOUNCE));
 	AddMeshToList(Object::CreatePlatform(PLATFORM_FINISH_NAME, PLATFORM_FINISH_BOTTOM_LEFT_CORNER,
 		PLATFORM_FINISH_HEIGHT, PLATFORM_THICKNESS, Object::PlatformType::FINISH));
 
@@ -102,6 +107,7 @@ void Homework1::FrameStart()
 	// Render platforms
 	RenderMesh2D(meshes[PLATFORM_STATIONARY1_NAME], shaders["VertexColor"], glm::mat3(1));
 	RenderMesh2D(meshes[PLATFORM_STATIONARY2_NAME], shaders["VertexColor"], glm::mat3(1));
+	RenderMesh2D(meshes[PLATFORM_STATIONARY3_NAME], shaders["VertexColor"], glm::mat3(1));
 	RenderMesh2D(meshes[PLATFORM_BOUNCE1_NAME], shaders["VertexColor"], glm::mat3(1));
 	RenderMesh2D(meshes[PLATFORM_BOUNCE2_NAME], shaders["VertexColor"], glm::mat3(1));
 	RenderMesh2D(meshes[PLATFORM_BOUNCE3_NAME], shaders["VertexColor"], glm::mat3(1));
@@ -165,7 +171,8 @@ void Homework1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 
 		if (onPlatform && cos(offsetAngle) <= 0) {
 			// Ignore mouse click event to prevent passing through a platform
-			std::cout << "[- REJECTED CLICK -] @ " << lastClickPosition[0] << " " << lastClickPosition[1] << std::endl;
+			std::cout << "[- REJECTED CLICK -] @ " << setw(7) << lastClickPosition[0]
+				<< " " << setw(7) << lastClickPosition[1] << std::endl;
 			return;
 		}
 
@@ -175,11 +182,13 @@ void Homework1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 		// Mouse click event happened
 		mouseClick = true;
 
-		std::cout << "[- ACCEPTED CLICK -] @ " << lastClickPosition[0] << " " << lastClickPosition[1] << std::endl;
+		std::cout << "[- ACCEPTED CLICK -] @ " << setw(7) << lastClickPosition[0]
+			<< " " << setw(7) << lastClickPosition[1] << std::endl;
 	}
 	else {
 		// Ignore mouse click event to prevent changing the direction during movement
-		std::cout << "[- REJECTED CLICK -] @ " << lastClickPosition[0] << " " << lastClickPosition[1] << std::endl;
+		std::cout << "[- REJECTED CLICK -] @ " << setw(7) << lastClickPosition[0]
+			<< " " << setw(7) << lastClickPosition[1] << std::endl;
 	}
 }
 
@@ -264,16 +273,18 @@ void Homework1::updateAstronautAfterCollision()
 	Line collisionLine = collisionLines[indexOfCollisionLine];
 	Line::CollisionLineType lineType = collisionLine.getCollisionLineType();
 
-	if (collisionLine.getPlatformType() == Object::PlatformType::STATIONARY)
+	switch (collisionLine.getPlatformType()) {
+
+	case (Object::PlatformType::STATIONARY):
 	{
-		// Astronaut is on a platform and can change direction
+		// Astronaut is on a stationary platform and can change direction
 		canAstronautChangeDirection = true;
 
 		// Calculate the distance from the center of the triangle to the platform
 		float aLine = collisionLine.getSecondPoint()[1] - collisionLine.getFirstPoint()[1];
 		float bLine = collisionLine.getSecondPoint()[0] - collisionLine.getFirstPoint()[0];
 		float cLine = collisionLine.getFirstPoint()[0] * collisionLine.getSecondPoint()[1] -
-			collisionLine.getSecondPoint()[0] * collisionLine.getFirstPoint()[1];	
+			collisionLine.getSecondPoint()[0] * collisionLine.getFirstPoint()[1];
 		float centerLine = aLine * centerOfAstronaut[0] + bLine * centerOfAstronaut[1] + cLine;
 		float distanceToPlatform = abs(centerLine / sqrt(aLine * aLine + bLine * bLine));
 
@@ -284,7 +295,7 @@ void Homework1::updateAstronautAfterCollision()
 		float offset = distanceToPlatform - distanceToBase;
 
 		/* I need this because some weird shit is going on with
-		 * the offset for left and right platform */
+		* the offset for left and right platform */
 		float offsetRight = (centerOfAstronaut[0] - collisionLine.getFirstPoint()[0]) - distanceToBase;
 		float offsetLeft = -(centerOfAstronaut[0] - collisionLine.getFirstPoint()[0]) - distanceToBase;
 
@@ -312,7 +323,43 @@ void Homework1::updateAstronautAfterCollision()
 
 		default:
 			break;
-		}		
+		}
+
+		break;
+	}
+
+	case (Object::PlatformType::BOUNCE):
+	{
+		switch (lineType)
+		{
+		case Line::CollisionLineType::BOTTOM:
+			rotationAngleOfAstronaut = rotationAngleOfAstronaut - M_PI / 2;
+			break;
+
+		case Line::CollisionLineType::TOP:
+			rotationAngleOfAstronaut = rotationAngleOfAstronaut - M_PI / 2;
+			break;
+
+		case Line::CollisionLineType::LEFT:
+			rotationAngleOfAstronaut = -rotationAngleOfAstronaut;
+			break;
+
+		case Line::CollisionLineType::RIGHT:
+			rotationAngleOfAstronaut = -rotationAngleOfAstronaut;
+			break;
+
+		default:
+			break;
+		}
+
+	break;
+
+	}
+	
+
+
+	default:
+		break;
 	}
 
 }
