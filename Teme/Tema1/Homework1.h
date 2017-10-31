@@ -8,6 +8,7 @@
 #include <Core/Engine.h>
 #include "Objects\Object.h"
 #include "Objects\Line.h"
+#include "Objects\Asteroid.h"
 #include "Transformations\Math.h"
 #include "Transformations\Transformation.h"
 #include "Objects\Astronaut.h"
@@ -40,8 +41,9 @@ private:
 	void OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods) override;
 	void OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY) override;
 	void OnWindowResize(int width, int height) override;
-	bool detectCollision();
-	void updateAstronautAfterCollision();
+	bool detectPlatformCollision();
+	int detectAsteroidCollision();
+	void updateAstronautAfterCollision(int idxAsteroid);
 
 	// Private constants for the meshes
 
@@ -57,8 +59,8 @@ private:
 	const glm::vec3 ASTEROID1_CENTER = glm::vec3(150, 400, 1);
 	const float ASTEROID1_RADIUS = 35;
 	const int ASTEROID1_Y_TRANSLATION_FACTOR = 200;
-	const int ASTEROID1_Y_LIMIT_UP = 200;
-	const int ASTEROID1_Y_LIMIT_DOWN = 100;
+	const int ASTEROID1_Y_LIMIT_UP = 300;
+	const int ASTEROID1_Y_LIMIT_DOWN = 50;
 
 	const std::string ASTEROID2_NAME = "asteroid2";
 	const float ASTEROID2_OFFSET_X = 350;
@@ -136,16 +138,17 @@ private:
 	// -----------------------------------------------------------------------
 	
 	// Private variables
-	glm::mat3 modelMatrix;		// the matrix used for transformations in the Update method
-	float tx1;					// translation value for Ox (asteroid1)
-	float ty1;					// translation value for Oy (asteroid1)
-	bool up1;					// condition variable for going up or down (asteroid1)
-	float scaleFactor2;			// scale factor value (asteroid2)
-	bool grow2;					// condition variable for growing or shrinking (asteroid2)
-	float rotationAngle3;		// angle for the rotation (asteroid3)
-	float scaleFactor3;			// scale factor value (asteroid3)
-	bool grow3;					// condition variable for growing or shrinking (asteroid3)
-	float rotationAngle4;		// angle for the rotation (asteroid4)
+	glm::mat3 modelMatrix;			// the matrix used for transformations in the Update method
+	Asteroid* collisionAsteroids[4];// stores collision asteroids
+	float tx1;						// translation value for Ox (asteroid1)
+	float ty1;						// translation value for Oy (asteroid1)
+	bool up1;						// condition variable for going up or down (asteroid1)
+	float scaleFactor2;				// scale factor value (asteroid2)
+	bool grow2;						// condition variable for growing or shrinking (asteroid2)
+	float rotationAngle3;			// angle for the rotation (asteroid3)
+	float scaleFactor3;				// scale factor value (asteroid3)
+	bool grow3;						// condition variable for growing or shrinking (asteroid3)
+	float rotationAngle4;			// angle for the rotation (asteroid4)
 
 	glm::vec3 centerOfAstronaut;			// coordinates for the center of the Astronaut
 	float txA;								// translation for the Astronaut on Ox axis
@@ -159,10 +162,11 @@ private:
 	int _acceptedClicks = 0;
 	int _rejectedClicks = 0;
 	int _collisions = 0;
+	int _asteroidHits = 0;
 
 	// -----------------------------------------------------------------------
 
-	// Animations for all moving objects
+	// ------------------ Animations for all moving objects ------------------
 
 	void animateAsteroid1(float deltaTimeSeconds) {
 		if (ty1 > ASTEROID1_Y_LIMIT_UP) {
@@ -172,15 +176,20 @@ private:
 			up1 = true;				// Asteroid 1 must change its direction and go up
 		}
 
-		if (up1) {
-			ty1 += deltaTimeSeconds * ASTEROID1_Y_TRANSLATION_FACTOR;	// Move asteroid 1 up
+		float frameTranslation = deltaTimeSeconds * ASTEROID1_Y_TRANSLATION_FACTOR;
+		if (!up1) {
+			frameTranslation = -frameTranslation;
 		}
-		else {
-			ty1 -= deltaTimeSeconds * ASTEROID1_Y_TRANSLATION_FACTOR;	// Move asteroid 1 down
-		}
+
+		ty1 += frameTranslation;	// Update translation factor for Oy
 
 		// Calculate the transformation matrix
 		modelMatrix = Transformation::Translate(tx1, ty1);
+
+		// Update center from vector of collision asteroids
+		if (collisionAsteroids[0] != NULL) {
+			collisionAsteroids[0]->setCenter(ASTEROID1_CENTER[0] + tx1, ASTEROID1_CENTER[1] + ty1);
+		}
 	}
 
 	void animateAsteroid2(float deltaTimeSeconds) {
@@ -191,17 +200,22 @@ private:
 			grow2 = true;			// Asteroid 2 must grow
 		}
 
-		if (grow2) {
-			scaleFactor2 += deltaTimeSeconds * ASTEROID2_SCALE_FACTOR;	// Grow asteroid2
+		float frameScaleFactor = deltaTimeSeconds * ASTEROID2_SCALE_FACTOR;
+		if (!grow2) {
+			frameScaleFactor = -frameScaleFactor;
 		}
-		else {
-			scaleFactor2 -= deltaTimeSeconds * ASTEROID2_SCALE_FACTOR;	// Shrink asteroid2
-		}
+
+		scaleFactor2 += frameScaleFactor;	// Update scale factor
 
 		// Calculate the transformation matrix
 		modelMatrix = Transformation::Translate(ASTEROID2_OFFSET_X, ASTEROID2_OFFSET_Y);
 		modelMatrix *= Transformation::Scale(scaleFactor2, scaleFactor2);
 		modelMatrix *= Transformation::Translate(-ASTEROID2_OFFSET_X, -ASTEROID2_OFFSET_Y);
+
+		// Update radius from vector of collision asteroids
+		if (collisionAsteroids[1] != NULL) {
+			collisionAsteroids[1]->setRadius(scaleFactor2 * ASTEROID2_RADIUS);
+		}
 	}
 
 	void animateAsteroid3(float deltaTimeSeconds) {
@@ -215,18 +229,23 @@ private:
 			grow3 = true;			// Asteroid 3 must grow
 		}
 
-		if (grow3) {
-			scaleFactor3 += deltaTimeSeconds * ASTEROID3_SCALE_FACTOR;	// Grow asteroid3
+		float frameScaleFactor = deltaTimeSeconds * ASTEROID3_SCALE_FACTOR;
+		if (!grow3) {
+			frameScaleFactor = -frameScaleFactor;
 		}
-		else {
-			scaleFactor3 -= deltaTimeSeconds * ASTEROID3_SCALE_FACTOR;	// Shrink asteroid3
-		}
+		
+		scaleFactor3 += frameScaleFactor;	// Update scale factor
 
 		// Calculate the transformation matrix
 		modelMatrix = Transformation::Translate(ASTEROID3_OFFSET_X, ASTEROID3_OFFSET_Y);
 		modelMatrix *= Transformation::Rotate(rotationAngle3);
 		modelMatrix *= Transformation::Scale(scaleFactor3, scaleFactor3);
 		modelMatrix *= Transformation::Translate(-ASTEROID3_OFFSET_X, -ASTEROID3_OFFSET_Y);
+
+		// Update radius from vector of collision asteroids
+		if (collisionAsteroids[2] != NULL) {
+			collisionAsteroids[2]->setRadius(scaleFactor3 * ASTEROID3_RADIUS);
+		}
 	}
 
 	void animateAsteroid4(float deltaTimeSeconds) {
@@ -249,11 +268,21 @@ private:
 		}
 		else {
 			bool copyOfOnPlatform = onPlatform;
-			if (detectCollision() && !copyOfOnPlatform) {
-					std::cout << "[---- COLLISION ---] @ " << std::setw(7) << centerOfAstronaut[0]
+			int idxAsteroidCollision = detectAsteroidCollision();
+			if ((detectPlatformCollision() && !copyOfOnPlatform) || idxAsteroidCollision != -1) {
+
+				if (idxAsteroidCollision != -1) {
+					std::cout << "[-- ASTEROID HIT --] @ " << std::setw(7) << centerOfAstronaut[0]
+						<< " " << std::setw(7) << centerOfAstronaut[1] << std::endl;
+					_asteroidHits++;
+				}
+				else {
+					std::cout << "[PLATFORM COLLISION] @ " << std::setw(7) << centerOfAstronaut[0]
 						<< " " << std::setw(7) << centerOfAstronaut[1] << std::endl;
 					_collisions++;
-					updateAstronautAfterCollision();
+				}
+
+				updateAstronautAfterCollision(idxAsteroidCollision);
 			}
 			else {
 				float updatedSpeed = deltaTimeSeconds * ASTRONAUT_SPEED;

@@ -80,6 +80,11 @@ void Homework1::Init()
 	AddMeshToList(Object::CreateAsteroid(ASTEROID2_NAME, ASTEROID2_CENTER, ASTEROID2_RADIUS));
 	AddMeshToList(Object::CreateAsteroid(ASTEROID3_NAME, ASTEROID3_CENTER, ASTEROID3_RADIUS));
 	AddMeshToList(Object::CreateAsteroid(ASTEROID4_NAME, ASTEROID4_CENTER, ASTEROID4_RADIUS));
+
+	collisionAsteroids[0] = new Asteroid(ASTEROID1_CENTER, ASTEROID1_RADIUS);
+	collisionAsteroids[1] = new Asteroid(ASTEROID2_CENTER, ASTEROID2_RADIUS);
+	collisionAsteroids[2] = new Asteroid(ASTEROID3_CENTER, ASTEROID3_RADIUS);
+	collisionAsteroids[3] = new Asteroid(ASTEROID4_CENTER, ASTEROID4_RADIUS);
 }
 
 void Homework1::addCollisionLine(Line line)
@@ -116,21 +121,29 @@ void Homework1::FrameStart()
 
 void Homework1::Update(float deltaTimeSeconds)
 {
-	// Animate and render asteroid 1
+	// Animate, update and render asteroid 1
 	animateAsteroid1(deltaTimeSeconds);
-	RenderMesh2D(meshes[ASTEROID1_NAME], shaders["VertexColor"], modelMatrix);
+	if (collisionAsteroids[0] != NULL) {
+		RenderMesh2D(meshes[ASTEROID1_NAME], shaders["VertexColor"], modelMatrix);
+	}
 
-	// Animate and render asteroid 2
+	// Animate, update and render asteroid 2
 	animateAsteroid2(deltaTimeSeconds);
-	RenderMesh2D(meshes[ASTEROID2_NAME], shaders["VertexColor"], modelMatrix);
+	if (collisionAsteroids[1] != NULL) {
+		RenderMesh2D(meshes[ASTEROID2_NAME], shaders["VertexColor"], modelMatrix);
+	}
 
-	// Animate and render asteroid 3
+	// Animate, update and render asteroid 3
 	animateAsteroid3(deltaTimeSeconds);
-	RenderMesh2D(meshes[ASTEROID3_NAME], shaders["VertexColor"], modelMatrix);
-
-	// Animate and render asteroid 4
+	if (collisionAsteroids[2] != NULL) {
+		RenderMesh2D(meshes[ASTEROID3_NAME], shaders["VertexColor"], modelMatrix);
+	}
+	
+	// Animate, update and render asteroid 4
 	animateAsteroid4(deltaTimeSeconds);
-	RenderMesh2D(meshes[ASTEROID4_NAME], shaders["VertexColor"], modelMatrix);
+	if (collisionAsteroids[3] != NULL) {
+		RenderMesh2D(meshes[ASTEROID4_NAME], shaders["VertexColor"], modelMatrix);
+	}
 
 	// Animate and render astronaut
 	animateAstronaut(deltaTimeSeconds);
@@ -209,7 +222,7 @@ void Homework1::OnWindowResize(int width, int height)
 {
 }
 
-bool Homework1::detectCollision() {
+bool Homework1::detectPlatformCollision() {
 
 	bool isCollision = false;
 
@@ -271,11 +284,36 @@ bool Homework1::detectCollision() {
 	return isCollision;
 }
 
-void Homework1::updateAstronautAfterCollision()
+int Homework1::detectAsteroidCollision()
 {
+	for (int i = 0; i < 4; i++) {
+		if (collisionAsteroids[i] != NULL) {
+			float dx = collisionAsteroids[i]->getCenter()[0] - centerOfAstronaut[0];
+			float dy = collisionAsteroids[i]->getCenter()[1] - centerOfAstronaut[1];
+			float totalR = ASTRONAUT_EDGE_LENGTH + collisionAsteroids[i]->getRadius();
+
+			if (dx * dx + dy * dy <= totalR * totalR) {
+				return i;
+			}
+		}
+	}
+
+	return -1;
+}
+
+void Homework1::updateAstronautAfterCollision(int idxAsteroid)
+{
+	// Update the astronaut after an asteroid collision
+	if (idxAsteroid != -1) {
+		collisionAsteroids[idxAsteroid] = NULL;
+		rotationAngleOfAstronaut = -rotationAngleOfAstronaut;
+		return;
+	}
+
 	Line collisionLine = collisionLines[indexOfCollisionLine];
 	Line::CollisionLineType lineType = collisionLine.getCollisionLineType();
 
+	// Update the astronaut after a platform collision
 	switch (collisionLine.getPlatformType()) {
 
 	case (Object::PlatformType::STATIONARY):
@@ -336,11 +374,11 @@ void Homework1::updateAstronautAfterCollision()
 		switch (lineType)
 		{
 		case Line::CollisionLineType::BOTTOM:
-			rotationAngleOfAstronaut = rotationAngleOfAstronaut - M_PI / 2;
+			rotationAngleOfAstronaut = rotationAngleOfAstronaut - M_PI;
 			break;
 
 		case Line::CollisionLineType::TOP:
-			rotationAngleOfAstronaut = rotationAngleOfAstronaut - M_PI / 2;
+			rotationAngleOfAstronaut = rotationAngleOfAstronaut - M_PI;
 			break;
 
 		case Line::CollisionLineType::LEFT:
@@ -362,15 +400,33 @@ void Homework1::updateAstronautAfterCollision()
 	{
 		// Close the window
 		Engine::GetWindow()->Close();
-		cout << "[-- WINDOW CLOSED -]\n----------------------------------------------" << endl;
+		cout << "[-- WINDOW CLOSED -]\n------------------------------------------" << endl;
 
 		// Display WINNING MESSAGE
-		cout << "*** OMG! YOU WON! YOU ARE ONE OF THE GREATEST ASTRONAUTS I HAVE EVER SEEN! ***" << endl;
+		cout << "\n*** OMG! YOU WON! YOU ARE ONE OF THE GREATEST ASTRONAUTS I HAVE EVER SEEN! ***\n" << endl;
 
 		// Display stats
-		cout << "*** Stats: [COLLISIONS: " << _collisions <<
-			"] [ACCEPTED CLICKS: " << _acceptedClicks <<
-			"] [REJECTED CLICKS: " << _rejectedClicks << "] ***\n";
+		cout << "Some stats of your intergalactic journey: " << endl;
+		cout << "[ASTEROID HITS: " << _asteroidHits << "] -> ";
+		for (int i = 0; i < _asteroidHits; i++) {
+			cout << "*";
+		}
+		cout << endl;
+		cout << "[PLATFORM COLLISIONS: " << _collisions << "] -> ";
+		for (int i = 0; i < _collisions; i++) {
+			cout << "*";
+		}
+		cout << endl;
+		cout << "[ACCEPTED CLICKS: " << _acceptedClicks << "] -> ";
+		for (int i = 0; i < _acceptedClicks; i++) {
+			cout << "*";
+		}
+		cout << endl;
+		cout << "[REJECTED CLICKS: " << _rejectedClicks << "] -> ";
+		for (int i = 0; i < _rejectedClicks; i++) {
+			cout << "*";
+		}
+		cout << endl << endl;
 	}
 
 	default:
