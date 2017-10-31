@@ -9,7 +9,7 @@
 namespace Object
 {
 	// The number of steps made in the discrete calculus for the Asteroid
-	const int DISCRETE_STEPS = 12;
+	const int DISCRETE_STEPS = 16;
 
 	// Enumeration of the possible platform types
 	enum PlatformType { STATIONARY, BOUNCE, FINISH };

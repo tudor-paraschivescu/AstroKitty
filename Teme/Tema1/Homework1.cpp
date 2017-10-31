@@ -46,6 +46,7 @@ void Homework1::Init()
 	cout << fixed << setprecision(2);
 
 	// Create and add the meshes to the list
+	// -----------------------------------------------------------------------
 	// The astronaut
 	AddMeshToList(Object::CreateAstronaut(ASTRONAUT_NAME, ASTRONAUT_CENTER, ASTRONAUT_EDGE_LENGTH));
 
@@ -80,7 +81,9 @@ void Homework1::Init()
 	AddMeshToList(Object::CreateAsteroid(ASTEROID2_NAME, ASTEROID2_CENTER, ASTEROID2_RADIUS));
 	AddMeshToList(Object::CreateAsteroid(ASTEROID3_NAME, ASTEROID3_CENTER, ASTEROID3_RADIUS));
 	AddMeshToList(Object::CreateAsteroid(ASTEROID4_NAME, ASTEROID4_CENTER, ASTEROID4_RADIUS));
+	// -----------------------------------------------------------------------
 
+	// Add the collision asteroids in the array where they are kept track of
 	collisionAsteroids[0] = new Asteroid(ASTEROID1_CENTER, ASTEROID1_RADIUS);
 	collisionAsteroids[1] = new Asteroid(ASTEROID2_CENTER, ASTEROID2_RADIUS);
 	collisionAsteroids[2] = new Asteroid(ASTEROID3_CENTER, ASTEROID3_RADIUS);
@@ -94,13 +97,13 @@ void Homework1::addCollisionLine(Line line)
 
 void Homework1::FrameStart()
 {
-	// clears the color buffer (using the previously set color) and depth buffer
+	// Clears the color buffer (using the previously set color) and depth buffer
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glm::ivec2 resolution = window->GetResolution();
 
-	// sets the screen area where to draw
+	// Sets the screen area where to draw
 	glViewport(0, 0, resolution.x, resolution.y);
 
 	// Render walls
@@ -286,18 +289,23 @@ bool Homework1::detectPlatformCollision() {
 
 int Homework1::detectAsteroidCollision()
 {
-	for (int i = 0; i < 4; i++) {
-		if (collisionAsteroids[i] != NULL) {
+	for (int i = 0; i < 4; i++)
+	{
+		if (collisionAsteroids[i] != NULL)
+		{
 			float dx = collisionAsteroids[i]->getCenter()[0] - centerOfAstronaut[0];
 			float dy = collisionAsteroids[i]->getCenter()[1] - centerOfAstronaut[1];
 			float totalR = ASTRONAUT_EDGE_LENGTH + collisionAsteroids[i]->getRadius();
 
-			if (dx * dx + dy * dy <= totalR * totalR) {
+			if (dx * dx + dy * dy <= totalR * totalR)
+			{
+				// Collision with asteroid at index i
 				return i;
 			}
 		}
 	}
 
+	// No asteroid collision
 	return -1;
 }
 
@@ -400,7 +408,7 @@ void Homework1::updateAstronautAfterCollision(int idxAsteroid)
 	{
 		// Close the window
 		Engine::GetWindow()->Close();
-		cout << "[-- WINDOW CLOSED -]\n------------------------------------------" << endl;
+		cout << "[-- WINDOW CLOSED -]\n-----------------------------------------" << endl;
 
 		// Display WINNING MESSAGE
 		cout << "\n*** OMG! YOU WON! YOU ARE ONE OF THE GREATEST ASTRONAUTS I HAVE EVER SEEN! ***\n" << endl;

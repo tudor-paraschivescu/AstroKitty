@@ -33,11 +33,3 @@ Line::CollisionLineType Line::getCollisionLineType()
 {
 	return _lineType;
 }
-
-void Line::toString()
-{
-	std::cout << "First Point [x: " << _firstPoint[0] <<
-		" y: " << _firstPoint[1] << "] "
-		<< "Second Point [x: " << _secondPoint[0] <<
-		" y: " << _secondPoint[1] << "]" << std::endl;
-}

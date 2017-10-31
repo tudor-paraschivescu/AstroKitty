@@ -16,7 +16,6 @@
 class Homework1 : public SimpleScene
 {
 public:
-
 	Homework1();
 	~Homework1();
 	void Init() override;
@@ -28,7 +27,6 @@ public:
 	static const int WINDOW_WIDTH = 1720;
 
 private:
-
 	// Private Methods
 	void FrameStart() override;
 	void Update(float deltaTimeSeconds) override;
@@ -46,7 +44,6 @@ private:
 	void updateAstronautAfterCollision(int idxAsteroid);
 
 	// Private constants for the meshes
-
 	// ------------------------------ ASTRONAUT ------------------------------
 	const std::string ASTRONAUT_NAME = "astronaut";
 	const glm::vec3 ASTRONAUT_CENTER = glm::vec3(40, 40, 1);
@@ -158,12 +155,11 @@ private:
 	bool mouseClick;						// condition variable to determine if a mouse click ocurred
 	bool onPlatform;						// condition variable to determine if the astronaut is on a platform
 
-	// Private statistics that will show up after game ends
+	// Private stats that will show up after game ends
 	int _acceptedClicks = 0;
 	int _rejectedClicks = 0;
 	int _collisions = 0;
 	int _asteroidHits = 0;
-
 	// -----------------------------------------------------------------------
 
 	// ------------------ Animations for all moving objects ------------------
